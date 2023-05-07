@@ -33,8 +33,31 @@ div.frame {
 canvas { 
 	image-rendering: pixelated;
 }
-#shadest { 
-	margin-right:20px
+.settings, .files{
+	display: flex;
+}
+.dimensions {
+	flex-grow: 1;
+	display: grid;
+	grid-template-areas: "a b c" "d e f";
+	align-content: space-around;
+	grid-template-columns: 5em 1fr 3em;
+}
+.files{
+	flex-direction: column;
+	gap: 5px;
+}
+.files, .dimensions{
+	border: solid 1px silver;
+	border-radius: 10px;
+	padding: 10px;
+}
+.settings{
+	margin-bottom: 5px;
+	gap: 5px;
+}
+#shadest, #ht{
+	justify-self:center;
 }
 </style>
 <script>
@@ -158,14 +181,17 @@ window.onload=function(){
 	Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
 }
 </script>
-<span class=line>
+<div class=settings>
+<span class=files>
 	<input type=file id=restore value=Load>
 	<input type=button id=store value=Save>
 	<input type=button id=save value=Export>
 	<input type=button id=save256 value=Export256>
-	Shades: <input id=shades type=range min=1 max=128 value=8><span id=shadest>8</span>
-	Hues: <input id=h type=range min=1 max=64 value=8><span id=ht>8</span>
+</span><span class=dimensions>
+	<span>Shades: </span><input id=shades type=range min=1 max=128 value=8><span id=shadest>8</span>
+	<span>Hues: </span><input id=h type=range min=1 max=64 value=8><span id=ht>8</span>
 </span>
+</div>
 <div id=palette></div>
 <canvas id=canvas width=8 height=8>
 <a id=link></a>
