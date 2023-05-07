@@ -1,0 +1,171 @@
+<style>
+input[type=range]{
+	flex-grow:1
+}
+div.test {
+	height:30px; 
+	display:flex;
+}
+div.test2 {
+	height:10px; 
+	display:flex;
+}
+div.frame {
+	border: solid 1px silver; 
+	width: 400px;
+	display: inline-block;
+}
+.il, .ql, .yl {
+	cursor: pointer;
+}
+.colors, .grays { 
+	flex-grow: 1;
+}
+.il,.ql {    
+	text-overflow: ellipsis;
+	display: inline-block;
+	width: 100px;
+	overflow: hidden;
+}
+.line{
+	display:flex
+}
+canvas { 
+	image-rendering: pixelated;
+}
+#shadest { 
+	margin-right:20px
+}
+</style>
+<script>
+let shadeCount = 8;
+function rgb(y, i, q){
+		return {r: y + 0.95608445 * i + 0.6208885 * q,
+		g: y - 0.27137664 * i - 0.6486059 * q,
+		b: y - 1.10561724 * i + 1.70250126 * q};
+}
+function parse(frame, className){
+	return parseInt(frame.querySelector('.'+className).value,10)/1000.0;
+}
+function clip(c){
+	return Math.max(0,Math.min(255,Math.round(c*255)));
+}
+function frame(n){
+  return `
+<div class=frame>
+<div class=test>&nbsp;</div>
+<div class=test2>&nbsp;</div>
+<!--<input id=y class=y type=range min=0 max=1000 ><span class=yl></span> -->
+<span class=line><input class=i type=range min=0 max=1000 ><span class=il></span></span>
+<span class=line><input class=q type=range min=0 max=1000 ><span class=ql></span></span>
+</div>`.repeat(n);
+}
+function el(id) {return document.getElementById(id);};
+window.onload=function(){
+	function save(norm){
+		const hueCount = Array.from(document.querySelectorAll('.frame')).length;
+		if (norm && hueCount * shadeCount > 256 ){
+			alert('more than 256 colors: ' + (hueCount * shadeCount));
+			return;
+		}
+		const cnv = el('canvas');
+		const width = norm?16:shadeCount;
+		const height = norm?16:hueCount;
+		cnv.setAttribute('width', width);
+		cnv.setAttribute('height', height);
+		const context = cnv.getContext('2d');
+		const data = context.getImageData(0, 0, width, height);
+		const colors =  Array.from(document.querySelectorAll('.colors'));
+		for(let i = 0; i < colors.length; i++){
+			let [r,g,b] = colors[i].style.backgroundColor.slice(4,-1).split(',').map(_ => parseInt(_,10));
+			data.data[4*i] = r;		
+			data.data[4*i+1] = g;		
+			data.data[4*i+2] = b;		
+			data.data[4*i+3] = 255;		
+		}
+		context.putImageData(data, 0, 0);
+		let link = document.getElementById('link');
+		link.setAttribute('download', `palette${hueCount}_${shadeCount}.png`);
+		link.setAttribute('href', canvas.toDataURL("image/png"));//.replace("image/png", "image/octet-stream"));
+		link.click();
+	}
+	el('save').onclick = ev => {save();}
+	el('save256').onclick = ev => {save(true);}
+	el('store').onclick = ev => {
+		const inputs = Array.from(document.querySelectorAll('input[type=range]')).map(_ => _.value);
+		let link = document.createElement("a");
+		let file = new Blob([inputs], {type: 'text/plain'});
+		link.href = URL.createObjectURL(file);
+	    	link.download = 'palette.txt';
+		link.click();
+	}
+	el('restore').onchange = ev => {
+		let target = ev.target;
+		let file = target.files[0];
+		if (!file)return;
+		let fr = new FileReader();
+		fr.onload = e => {
+			let values = e.target.result.split(',').map(_ => parseInt(_, 10));
+			el('shadest').textContent = shadeCount = values[0];
+			el('palette').innerHTML = frame(el('ht').textContent = values[1]);
+			Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
+			const inputs = Array.from(document.querySelectorAll('input[type=range]'));
+			for(let i = 0; i < inputs.length; i++){
+				inputs[i].value = values[i];
+			}
+			Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
+		};
+		fr.readAsText(file);
+	};
+	el('shades').onchange=ev =>{
+		el('shadest').textContent = shadeCount = parseInt(ev.target.value,10)
+		Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
+	};
+	el('h').onchange=ev =>{
+		el('palette').innerHTML = frame(el('ht').textContent = parseInt(ev.target.value,10));
+		Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
+	}
+	function redraw(frame){
+		const i = 2*0.593*(parse(frame,'i'))-0.593;
+		const q = 2*0.52*(parse(frame,'q'))-0.52;
+		const cols = Array(shadeCount).fill(0).map( (_,idx) => rgb(idx / shadeCount,i,q));
+		const grays = Array(shadeCount).fill(0).map( (_,idx) => rgb(idx / shadeCount,0,0));
+		frame.querySelector('.test').innerHTML = cols.map(col => `<span class="colors" style="background: rgb(${ clip(col.r) + ',' + clip(col.g) + ',' + clip(col.b)})" >&nbsp;</span>`).join('');
+		frame.querySelector('.test2').innerHTML = grays.map(gray => `<span class="grays" style="background: rgb(${ clip(gray.r) + ',' + clip(gray.g) + ',' + clip(gray.b)})" >&nbsp;</span>`).join('');
+		frame.querySelector('.il').textContent = i;
+		frame.querySelector('.ql').textContent = q;
+	}
+	function handleInput(ev){
+		let frame = ev.target;
+		while (frame && frame.className!='frame') frame = frame.parentNode;
+		if (!frame) return;
+		redraw(frame);
+	}
+	document.addEventListener('input', handleInput);
+	document.addEventListener('click',function(ev){
+		let className;
+		switch(ev.target.className){
+			case 'yl': className='y';break;
+			case 'il':className='i';break;
+			case 'ql':className='q';break;
+			default: return;
+		}
+		const ctrl = ev.target.parentNode.querySelector('.'+className);
+		ctrl.value='500';
+		handleInput(ev);
+	});
+	el('palette').innerHTML = frame(8);
+	Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
+}
+</script>
+<span class=line>
+	<input type=file id=restore value=Load>
+	<input type=button id=store value=Save>
+	<input type=button id=save value=Export>
+	<input type=button id=save256 value=Export256>
+	Shades: <input id=shades type=range min=1 max=128 value=8><span id=shadest>8</span>
+	Hues: <input id=h type=range min=1 max=64 value=8><span id=ht>8</span>
+</span>
+<div id=palette></div>
+<canvas id=canvas width=8 height=8>
+<a id=link></a>
