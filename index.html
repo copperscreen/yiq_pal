@@ -15,8 +15,9 @@ div.frame {
 	width: 400px;
 	display: inline-block;
 }
-.il, .ql, .yl {
+.il, .ql, .yl, #shadest, #shadesl, #huesl, #ht {
 	cursor: pointer;
+	user-select: none;
 }
 .colors, .grays { 
 	flex-grow: 1;
@@ -165,8 +166,18 @@ window.onload=function(){
 		redraw(frame);
 	}
 	document.addEventListener('input', handleInput);
+	const inc = (ctrlId, labelId, increment, max) => {
+		el(labelId).textContent = el(ctrlId).value = Math.min(max, Math.max(1, parseInt(el(ctrlId).value,10) + increment));
+		el(ctrlId).onchange( { target: el(ctrlId) } );
+	}
 	document.addEventListener('click',function(ev){
 		let className;
+		switch(ev.target.id){
+			case 'shadesl': inc('shades', 'shadest', -1, 128); return;
+			case 'shadest': inc('shades', 'shadest', 1, 128); return;
+			case 'huesl': inc('h', 'ht', -1, 64); return;
+			case 'ht': inc('h', 'ht', 1, 64); return;
+		}
 		switch(ev.target.className){
 			case 'yl': className='y';break;
 			case 'il':className='i';break;
@@ -188,8 +199,8 @@ window.onload=function(){
 	<input type=button id=save value=Export>
 	<input type=button id=save256 value=Export256>
 </span><span class=dimensions>
-	<span>Shades: </span><input id=shades type=range min=1 max=128 value=8><span id=shadest>8</span>
-	<span>Hues: </span><input id=h type=range min=1 max=64 value=8><span id=ht>8</span>
+	<span id=shadesl>Shades: </span><input id=shades type=range min=1 max=128 value=8><span id=shadest>8</span>
+	<span id=huesl>Hues: </span><input id=h type=range min=1 max=64 value=8><span id=ht>8</span>
 </span>
 </div>
 <div id=palette></div>
