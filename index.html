@@ -152,8 +152,8 @@ window.onload=function(){
 	function redraw(frame){
 		const i = 2*0.593*(parse(frame,'i'))-0.593;
 		const q = 2*0.52*(parse(frame,'q'))-0.52;
-		const cols = Array(shadeCount).fill(0).map( (_,idx) => rgb(idx / shadeCount,i,q));
-		const grays = Array(shadeCount).fill(0).map( (_,idx) => rgb(idx / shadeCount,0,0));
+		const cols = Array(shadeCount).fill(0).map( (_,idx) => rgb(idx / (shadeCount-1),i,q));
+		const grays = Array(shadeCount).fill(0).map( (_,idx) => rgb(idx / (shadeCount-1),0,0));
 		frame.querySelector('.test').innerHTML = cols.map(col => `<span class="colors" style="background: rgb(${ clip(col.r) + ',' + clip(col.g) + ',' + clip(col.b)})" >&nbsp;</span>`).join('');
 		frame.querySelector('.test2').innerHTML = grays.map(gray => `<span class="grays" style="background: rgb(${ clip(gray.r) + ',' + clip(gray.g) + ',' + clip(gray.b)})" >&nbsp;</span>`).join('');
 		frame.querySelector('.il').textContent = i;
