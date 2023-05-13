@@ -61,13 +61,13 @@ canvas {
 	justify-self:center;
 }
 .dupe {
-    animation: 0.5s linear 1s infinite alternate flash
+    animation: 1s linear 0s infinite alternate flash
 }
 @keyframes flash{
     from{
 	    filter: invert(0);
     }
-	25%{
+	80%{
 	    filter: invert(0);
 	}
 	to{
@@ -189,6 +189,7 @@ window.onload=function(){
 		while (frame && frame.className!='frame') frame = frame.parentNode;
 		if (!frame) return;
 		redraw(frame);
+		findDupes(); 
 	}
 	document.addEventListener('input', handleInput);
 	const inc = (ctrlId, labelId, increment, max) => {
