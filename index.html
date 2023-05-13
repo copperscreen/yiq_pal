@@ -1,4 +1,4 @@
-<style>
+﻿<style>
 input[type=range]{
 	flex-grow:1
 }
@@ -60,6 +60,19 @@ canvas {
 #shadest, #ht{
 	justify-self:center;
 }
+.dupe {
+    animation: 0.5s linear 1s infinite alternate flash
+}
+@keyframes flash{
+    from{
+	    filter: invert(0);
+    }
+	25%{
+	    filter: invert(0);
+	}
+	to{
+	    filter: invert(1);
+	}
 </style>
 <script>
 let shadeCount = 8;
@@ -138,6 +151,7 @@ window.onload=function(){
 				inputs[i].value = values[i];
 			}
 			Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
+			findDupes(); 
 		};
 		fr.readAsText(file);
 	};
@@ -159,6 +173,17 @@ window.onload=function(){
 		frame.querySelector('.il').textContent = i;
 		frame.querySelector('.ql').textContent = q;
 	}
+	function findDupes(){
+	    let map = new Map();
+		let cols = Array.from(document.body.querySelectorAll('span.colors'));
+		cols.forEach(_ => {
+		    _.classList.remove('dupe');
+			map.set(_.style.background, (map.get(_.style.background) || 0) + 1);
+		});
+        cols.forEach(_ =>{
+		    if (map.get(_.style.background) > 1) _.classList.add('dupe');
+		});
+	}
 	function handleInput(ev){
 		let frame = ev.target;
 		while (frame && frame.className!='frame') frame = frame.parentNode;
@@ -173,20 +198,21 @@ window.onload=function(){
 	document.addEventListener('click',function(ev){
 		let className;
 		switch(ev.target.id){
-			case 'shadesl': inc('shades', 'shadest', -1, 128); return;
-			case 'shadest': inc('shades', 'shadest', 1, 128); return;
-			case 'huesl': inc('h', 'ht', -1, 64); return;
-			case 'ht': inc('h', 'ht', 1, 64); return;
+			case 'shadesl': inc('shades', 'shadest', -1, 128); findDupes(); return;
+			case 'shadest': inc('shades', 'shadest', 1, 128); findDupes(); return;
+			case 'huesl': inc('h', 'ht', -1, 64); findDupes(); return;
+			case 'ht': inc('h', 'ht', 1, 64); findDupes(); return;
 		}
 		switch(ev.target.className){
-			case 'yl': className='y';break;
-			case 'il':className='i';break;
-			case 'ql':className='q';break;
+			case 'yl': className='y';findDupes(); break;
+			case 'il':className='i'; findDupes(); break;
+			case 'ql':className='q'; findDupes(); break;
 			default: return;
 		}
 		const ctrl = ev.target.parentNode.querySelector('.'+className);
 		ctrl.value='500';
 		handleInput(ev);
+		findDupes(); 
 	});
 	el('palette').innerHTML = frame(8);
 	Array.from(document.querySelectorAll('.frame')).forEach(frame => redraw(frame));
